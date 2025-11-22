@@ -2,7 +2,7 @@ const express = require("express");
 const fetch = require("node-fetch");
 const cors = require("cors");
 const multer = require("multer");
-const pdfParse = require("pdf-parse"); // <-- NUEVO
+const pdfParse = require("pdf-parse/lib/pdf-parse.js"); // <-- NUEVO
 const fs = require("fs"); // <-- NUEVO (precarga desde ruta)
 require("dotenv").config();
 
