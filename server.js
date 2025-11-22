@@ -4,14 +4,8 @@ const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 require("dotenv").config();
+const pdfParse = require("pdf-parse");
 
-let pdf; // declaramos la variable
-
-// import dinámico compatible con Node 20+, Render y CommonJS
-(async () => {
-  const module = await import("pdf-parse/lib/pdf-parse.js");
-  pdf = module.default;
-})();
 
 const app = express();
 app.use(cors()); // habilita CORS para RN/Expo
