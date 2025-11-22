@@ -2,9 +2,16 @@ const express = require("express");
 const fetch = require("node-fetch");
 const cors = require("cors");
 const multer = require("multer");
-const pdfParse = require("pdf-parse/lib/pdf-parse.js"); // <-- NUEVO
-const fs = require("fs"); // <-- NUEVO (precarga desde ruta)
+const fs = require("fs");
 require("dotenv").config();
+
+let pdf; // declaramos la variable
+
+// import dinámico compatible con Node 20+, Render y CommonJS
+(async () => {
+  const module = await import("pdf-parse/lib/pdf-parse.js");
+  pdf = module.default;
+})();
 
 const app = express();
 app.use(cors()); // habilita CORS para RN/Expo
