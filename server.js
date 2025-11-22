@@ -103,6 +103,7 @@ INSTRUCCIONES:
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: augmented,
+        max_tokens: 300,
       }),
     });
 
@@ -113,7 +114,7 @@ INSTRUCCIONES:
     }
 
     const data = await r.json();
-    const content = data.choices?.[0]?.message?.content ?? "";
+    const content = data?.choices?.[0]?.message?.content || "";
     res.json({ content });
   } catch (e) {
     console.error("Server error /chat:", e);
@@ -181,7 +182,7 @@ app.post("/tts", async (req, res) => {
 
     const buffer = Buffer.from(await r.arrayBuffer());
     const base64 = buffer.toString("base64");
-    res.json({ audio: base64, mime: "audio/mpeg" }); // respuesta original
+    res.json({ audio: base64, mime: "audio/mpeg" });
   } catch (e) {
     console.error("Server error /tts:", e);
     res.status(500).json({ error: "Server error" });
@@ -214,7 +215,6 @@ app.post("/synthesize", async (req, res) => {
 
     const buffer = Buffer.from(await r.arrayBuffer());
     const base64 = buffer.toString("base64");
-    // la app espera { base64, mime }
     res.json({ base64, mime: "audio/mpeg" });
   } catch (e) {
     console.error("Server error /synthesize:", e);
