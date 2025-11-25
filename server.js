@@ -45,14 +45,19 @@ const uploadPdf = multer({
 });
 app.post("/kb/upload", uploadPdf.single("file"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: "Falta el archivo (campo 'file')." });
+    if (!req.file)
+      return res.status(400).json({ error: "Falta el archivo (campo 'file')." });
     const parsed = await pdfParse(req.file.buffer);
     KB_TEXT = (parsed.text || "")
       .replace(/\u0000/g, "")
       .replace(/[ \t]+\n/g, "\n")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
-    res.json({ ok: true, chars: KB_TEXT.length, preview: KB_TEXT.slice(0, 200) });
+    res.json({
+      ok: true,
+      chars: KB_TEXT.length,
+      preview: KB_TEXT.slice(0, 200),
+    });
   } catch (e) {
     console.error("[/kb/upload] error:", e);
     res.status(500).json({ error: "Error al procesar el PDF" });
@@ -76,8 +81,7 @@ app.post("/chat", async (req, res) => {
     // ==== NUEVO: inyectar el contenido del PDF como si lo pegaras en el prompt ====
     let augmented = messages;
     if (KB_TEXT) {
-      const docBlock =
-`[DOCUMENTO PDF]
+      const docBlock = `[DOCUMENTO PDF]
 ${KB_TEXT.slice(0, MAX_CHARS)}
 
 INSTRUCCIONES:
@@ -87,9 +91,16 @@ INSTRUCCIONES:
 
       const first = messages?.[0];
       if (first?.role === "system") {
-        augmented = [ first, { role: "system", content: docBlock }, ...messages.slice(1) ];
+        augmented = [
+          first,
+          { role: "system", content: docBlock },
+          ...messages.slice(1),
+        ];
       } else {
-        augmented = [ { role: "system", content: docBlock }, ...(messages || []) ];
+        augmented = [
+          { role: "system", content: docBlock },
+          ...(messages || []),
+        ];
       }
     }
     // ================================================================
@@ -128,7 +139,6 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No audio file" });
 
-    // OpenAI Whisper v1 (form-data)
     const form = new (require("form-data"))();
     form.append("file", req.file.buffer, {
       filename: req.file.originalname || "audio.m4a",
@@ -136,11 +146,14 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     });
     form.append("model", "gpt-4o-mini-transcribe");
 
-    const r = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-      body: form,
-    });
+    const r = await fetch(
+      "https://api.openai.com/v1/audio/transcriptions",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: form,
+      }
+    );
 
     if (!r.ok) {
       const err = await r.text();
@@ -159,7 +172,9 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
 /* ---------- TTS (compat) /tts ---------- */
 app.post("/tts", async (req, res) => {
   try {
-    const { text, voice = "alloy" } = req.body;
+    const { text, voice } = req.body;
+
+    const selectedVoice = voice || "alloy";
 
     const r = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
@@ -169,7 +184,7 @@ app.post("/tts", async (req, res) => {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini-tts",
-        voice,
+        voice: selectedVoice,
         input: text,
       }),
     });
@@ -192,7 +207,9 @@ app.post("/tts", async (req, res) => {
 /* ---------- TTS (lo que espera tu app) /synthesize ---------- */
 app.post("/synthesize", async (req, res) => {
   try {
-    const { text, voice = "alloy" } = req.body;
+    const { text, voice } = req.body;
+
+    const selectedVoice = voice || "alloy";
 
     const r = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
@@ -202,7 +219,7 @@ app.post("/synthesize", async (req, res) => {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini-tts",
-        voice,
+        voice: selectedVoice,
         input: text,
       }),
     });
